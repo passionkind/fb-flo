@@ -231,10 +231,11 @@
     })[0];
 
     if (!resource) {
-      this.logger.error(
-        'Resource with the following URL is not on the page:',
+      this.logger.log(
+        'Resource with the following URL is not on the page and must be refreshed manually ("fb-flo-manual" event):',
         updatedResource.resourceURL
       );
+      triggerManualReloadEvent(updatedResource);
       return;
     }
 
@@ -277,6 +278,21 @@
         return cb.apply(this, arguments);
       }
     };
+  }
+
+  function triggerManualReloadEvent(resource) {
+    var data = {
+      url: resource.resourceURL,
+      contents: resource.contents
+    };
+
+    var script = '(function() {' +
+      'var event = new Event(\'fb-flo-manual\');' +
+      'event.data = ' + JSON.stringify(data) + ';' +
+      'window.dispatchEvent(event);' +
+      '})()';
+
+    chrome.devtools.inspectedWindow.eval(script);
   }
 
   function triggerReloadEvent(resource) {
